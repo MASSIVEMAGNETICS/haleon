@@ -1,0 +1,98 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:6.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  hlhfm-core:
+    build: ./hlhfm-core
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - HLHFM_DIM=512
+      - HLHFM_DECAY_RATE=0.1
+      - PORT=8000
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  eidolon-inference:
+    build: ./eidolon-inference
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - ONNX_MODEL_PATH=/app/eidolon.onnx
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 16G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  preprocessor:
+    build: ./preprocessor
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  evaluator:
+    build: ./evaluator
+    ports:
+      - "8003:8003"
+    environment:
+      - PORT=8003
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - HLHFM_URL=http://hlhfm-core:8000
+      - EIDOLON_URL=http://eidolon-inference:8001
+      - PREPROCESSOR_URL=http://preprocessor:8002
+      - EVALUATOR_URL=http://evaluator:8003
+    depends_on:
+      - hlhfm-core
+      - eidolon-inference
+      - preprocessor
+      - evaluator
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:

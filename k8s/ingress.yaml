@@ -1,0 +1,90 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: haleon-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+  - hosts:
+    - api.haleon.example.com
+    secretName: haleon-tls
+  rules:
+  - host: api.haleon.example.com
+    http:
+      paths:
+      - path: /hlhfm
+        pathType: Prefix
+        backend:
+          service:
+            name: hlhfm-core-service
+            port:
+              number: 8000
+      - path: /eidolon
+        pathType: Prefix
+        backend:
+          service:
+            name: eidolon-inference-service
+            port:
+              number: 8001
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway-service
+            port:
+              number: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  labels:
+    app: api-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: api-gateway:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: HLHFM_URL
+          value: "http://hlhfm-core-service:8000"
+        - name: EIDOLON_URL
+          value: "http://eidolon-inference-service:8001"
+        - name: PREPROCESSOR_URL
+          value: "http://preprocessor-service:8002"
+        - name: EVALUATOR_URL
+          value: "http://evaluator-service:8003"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-service
+spec:
+  selector:
+    app: api-gateway
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
