@@ -69,7 +69,12 @@ async def evaluate_audio(req: EvaluateRequest):
         text_words = len(req.reference_text.split())
         audio_length = len(audio_array)
         expected_length = text_words * 5000  # ~0.2s per word
-        length_match = 1.0 - min(abs(audio_length - expected_length) / expected_length, 1.0)
+        
+        if expected_length > 0:
+            length_match = 1.0 - min(abs(audio_length - expected_length) / expected_length, 1.0)
+        else:
+            length_match = 0.5  # Default for empty text
+        
         clap_score = float(0.5 + 0.4 * length_match)
         
         # Additional quality metrics

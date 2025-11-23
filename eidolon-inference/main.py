@@ -92,13 +92,13 @@ async def metrics():
     """Prometheus metrics endpoint."""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 @app.post("/generate", response_model=GenerateResponse)
 async def generate_music(gen_req: GenerateRequest):
     """
     Generate music from text prompt.
     
-    Retry policy: 3 attempts with exponential backoff
+    NOTE: In production, move retry logic to internal functions rather than endpoint level
+    to avoid retrying the entire HTTP request.
     """
     try:
         with eidolon_inference_latency_ms.time():
