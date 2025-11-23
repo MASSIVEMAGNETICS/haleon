@@ -78,14 +78,16 @@ async def preprocess_audio(audio_file: UploadFile = File(...)):
     Returns:
         Mel-spectrogram representation
     """
+    import tempfile
+    
     try:
         # Read audio file
         audio_bytes = await audio_file.read()
         
-        # Save temporarily
-        temp_path = f"/tmp/{audio_file.filename}"
-        with open(temp_path, "wb") as f:
-            f.write(audio_bytes)
+        # Save to secure temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.audio') as temp_file:
+            temp_path = temp_file.name
+            temp_file.write(audio_bytes)
         
         # Load with librosa
         y, sr = librosa.load(temp_path, sr=22050)

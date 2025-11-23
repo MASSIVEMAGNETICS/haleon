@@ -3,6 +3,7 @@ Evaluator Service
 Real-time FAD and CLAP scoring for generated music.
 """
 
+import os
 import logging
 import numpy as np
 from typing import List

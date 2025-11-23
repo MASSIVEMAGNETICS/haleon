@@ -10,9 +10,11 @@ metadata:
 spec:
   tls:
   - hosts:
+    # TODO: Replace with actual domain (use env vars or Helm templates for different environments)
     - api.haleon.example.com
     secretName: haleon-tls
   rules:
+  # TODO: Replace with actual domain (use env vars or Helm templates for different environments)
   - host: api.haleon.example.com
     http:
       paths:

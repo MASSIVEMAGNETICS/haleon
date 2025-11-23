@@ -200,7 +200,7 @@ class RedisHLHFM(HyperLiquidHolographicFractalMemory):
         """
         super().__init__(**kwargs)
         self.redis_url = redis_url
-        self.redis = redis.Redis.from_url(redis_url, decode_responses=False)
+        self.redis = redis.Redis.from_url(redis_url, decode_responses=True)
         self._prefix = "hlhfm:"
         self.circuit_breaker = CircuitBreaker(fail_max=3, reset_timeout=60)
         
@@ -249,9 +249,9 @@ class RedisHLHFM(HyperLiquidHolographicFractalMemory):
             logger.info(f"Loading {len(keys)} entries from Redis")
             
             for key in keys:
-                data_bytes = self.redis.get(key)
-                if data_bytes:
-                    data = json.loads(data_bytes)
+                data_str = self.redis.get(key)
+                if data_str:
+                    data = json.loads(data_str)
                     entry = HoloEntry.from_dict(data)
                     self.entries.append(entry)
                     
