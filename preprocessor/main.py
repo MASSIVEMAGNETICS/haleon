@@ -80,6 +80,7 @@ async def preprocess_audio(audio_file: UploadFile = File(...)):
     """
     import tempfile
     
+    temp_path = None
     try:
         # Read audio file
         audio_bytes = await audio_file.read()
@@ -96,9 +97,6 @@ async def preprocess_audio(audio_file: UploadFile = File(...)):
         mel_spec = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
         mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
         
-        # Clean up
-        os.remove(temp_path)
-        
         return AudioPreprocessResponse(
             mel_spectrogram=mel_spec_db.tolist(),
             sample_rate=sr,
@@ -108,6 +106,14 @@ async def preprocess_audio(audio_file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Audio preprocessing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Preprocessing failed: {str(e)}")
+    
+    finally:
+        # Ensure cleanup even if exception occurs
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception as cleanup_error:
+                logger.warning(f"Failed to cleanup temp file {temp_path}: {cleanup_error}")
 
 
 if __name__ == "__main__":

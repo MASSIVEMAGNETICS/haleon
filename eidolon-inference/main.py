@@ -128,9 +128,11 @@ async def generate_music(gen_req: GenerateRequest):
             # Update metrics
             eidolon_generations_total.inc()
             
-            # Mock quality scores (in production, compute from real evaluator)
-            eidolon_fad_score.observe(np.random.uniform(10, 50))
-            eidolon_clap_score.observe(np.random.uniform(0.5, 0.9))
+            # Record quality scores (mock for development, in production use real evaluator)
+            # TODO: Replace with real FAD/CLAP evaluation from evaluator service
+            if os.getenv("MOCK_METRICS", "false").lower() == "true":
+                eidolon_fad_score.observe(np.random.uniform(10, 50))
+                eidolon_clap_score.observe(np.random.uniform(0.5, 0.9))
             
             return GenerateResponse(
                 waveform=waveform.tolist(),

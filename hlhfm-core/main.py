@@ -173,14 +173,16 @@ async def query_memory(request: Request, query_req: QueryRequest):
                 top_k=query_req.top_k
             )
             
-            # Update metrics
-            hlhfm_queries_total.inc()
-            
-            return QueryResponse(
+            response = QueryResponse(
                 results=results,
                 query_text=query_req.cue_text,
                 count=len(results)
             )
+            
+            # Update metrics only on success
+            hlhfm_queries_total.inc()
+            
+            return response
     
     except Exception as e:
         logger.error(f"Query failed: {e}")
