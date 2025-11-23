@@ -4,6 +4,7 @@ Unified REST interface for HLHFM + Eidolon-Ω system.
 """
 
 import os
+import uuid
 import logging
 from typing import List, Dict, Any
 
@@ -123,7 +124,6 @@ async def generate_music(req: GenerateMusicRequest):
             # Step 4: Save to HLHFM if enabled
             if req.save_to_memory:
                 try:
-                    import uuid
                     await client.post(
                         f"{HLHFM_URL}/write",
                         json={

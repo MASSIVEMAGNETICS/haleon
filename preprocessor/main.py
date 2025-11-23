@@ -4,6 +4,7 @@ Audio and text preprocessing for HLHFM and Eidolon-Ω.
 """
 
 import os
+import tempfile
 import logging
 import numpy as np
 from typing import List, Optional
@@ -78,8 +79,6 @@ async def preprocess_audio(audio_file: UploadFile = File(...)):
     Returns:
         Mel-spectrogram representation
     """
-    import tempfile
-    
     temp_path = None
     try:
         # Read audio file

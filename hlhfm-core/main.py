@@ -4,6 +4,8 @@ Production-grade service for holographic memory operations.
 """
 
 import os
+import json
+import uuid
 import logging
 from typing import Dict, Any, List
 from contextlib import asynccontextmanager
@@ -131,7 +133,6 @@ async def write_memory(request: Request, write_req: WriteRequest):
             
             # Add echo_id if not present
             if "echo_id" not in write_req.metadata:
-                import uuid
                 write_req.metadata["echo_id"] = str(uuid.uuid4())
             
             # Write to HLHFM
@@ -228,8 +229,7 @@ async def erase_user_data(user_id: str):
             for key in keys:
                 data_bytes = hlhfm_instance.redis.get(key)
                 if data_bytes:
-                    import json
-                    data = json.loads(data_bytes)
+                    data = json.loads(data_bytes.decode('utf-8'))
                     if data.get("meta", {}).get("user_id") == user_id:
                         hlhfm_instance.redis.delete(key)
                         removed_count += 1

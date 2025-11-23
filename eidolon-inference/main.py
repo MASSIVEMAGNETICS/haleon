@@ -4,6 +4,7 @@ FastAPI service for music generation using ONNX Runtime.
 """
 
 import os
+import httpx
 import logging
 from typing import List, Optional
 from contextlib import asynccontextmanager
@@ -153,8 +154,6 @@ async def generate_with_hlhfm(text: str, hlhfm_url: str = "http://hlhfm-core:800
         text: Text prompt
         hlhfm_url: URL of HLHFM service
     """
-    import httpx
-    
     try:
         # Query HLHFM for similar memories
         async with httpx.AsyncClient() as client:
